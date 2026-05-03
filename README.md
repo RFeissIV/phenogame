@@ -271,26 +271,6 @@ The package should be independently inspected, tested, and validated before use 
 
 ---
 
-## Recommended wording
-
-Use:
-
-> PhenoGame is a research-alpha package for constructing data-induced finite games from phenology data and evaluating decisions under uncertainty with EML-derived payoff learners, pairwise model comparisons, minimax/ε-CCE analysis, and robustness diagnostics.
-
-Avoid:
-
-> PhenoGame proves a new Nash theorem.
-
-Avoid:
-
-> PhenoGame is a validated agronomic prescription engine.
-
-Avoid:
-
-> EML-RML has a proven no-regret theorem.
-
----
-
 ## Citation
 
 ```bibtex
