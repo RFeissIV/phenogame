@@ -63,10 +63,6 @@ PhenoGame does **not** claim to:
 - guarantee real-world crop or financial outcomes;
 - prove formal no-regret guarantees for EML-derived regret transforms.
 
-The conservative claim is:
-
-> PhenoGame constructs finite, data-induced decision games from observed phenology/agricultural data and evaluates candidate policies using minimax, ε-CCE, pairwise model-comparison, bootstrap, and sensitivity diagnostics.
-
 ---
 
 ## Installation
