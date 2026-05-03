@@ -1,0 +1,325 @@
+# PhenoGame
+
+**Research-alpha Python package for constructing data-induced phenology games from agricultural/phenology data.**
+
+PhenoGame combines:
+
+```text
+data → 13 EML-derived payoff learners → pairwise model comparisons
+→ finite game against Nature → minimax / ε-CCE
+→ bootstrap + sensitivity diagnostics → audit certificate
+```
+
+PhenoGame is intended for experimentation, reproducible method development, and critique from researchers, developers, agronomists, crop modelers, and game-theory practitioners.
+
+---
+
+## Project status
+
+**Early research alpha.**
+
+PhenoGame is **not** a validated agronomic prescription system and should not be used as the sole basis for crop-management, harvest, pesticide, irrigation, insurance, financial, or commercial decisions.
+
+Feedback, issues, pull requests, mathematical critiques, agronomic suggestions, and software-engineering recommendations are welcome.
+
+---
+
+## What it does
+
+PhenoGame builds a forward-only pipeline:
+
+1. Load observed phenology/agricultural data.
+2. Fit 13 candidate EML-derived model/payoff families.
+3. Construct binary EML-tree features.
+4. Learn payoff surfaces.
+5. Compare models pairwise using:
+
+   ```text
+   p_ij = Pr(model i beats model j)
+   ```
+
+6. Build a finite two-player game:
+
+   ```text
+   Player 1: grower / algorithm / model selector
+   Player 2: Nature / scenario uncertainty
+   ```
+
+7. Evaluate decisions using zero-sum minimax, ε-CCE, bootstrap stability, and sensitivity analysis.
+8. Export recommendation/audit certificates.
+
+The 13 EML families are **candidate model choices**, not 13 players.
+
+---
+
+## What it does not claim
+
+PhenoGame does **not** claim to:
+
+- prove a new Nash theorem;
+- define a new universal equilibrium concept;
+- replace fixed-point equilibrium theory;
+- provide validated agronomic prescriptions;
+- guarantee real-world crop or financial outcomes;
+- prove formal no-regret guarantees for EML-derived regret transforms.
+
+The conservative claim is:
+
+> PhenoGame constructs finite, data-induced decision games from observed phenology/agricultural data and evaluates candidate policies using minimax, ε-CCE, pairwise model-comparison, bootstrap, and sensitivity diagnostics.
+
+---
+
+## Installation
+
+From a local source checkout:
+
+```bash
+python -m pip install -e .
+```
+
+From a built wheel:
+
+```bash
+python -m pip install phenogame-0.3.0-py3-none-any.whl
+```
+
+From PyPI, after public release:
+
+```bash
+python -m pip install phenogame
+```
+
+---
+
+## Quick start
+
+```python
+from phenogame import load_npn_csv, run_phenology_game
+
+npn = load_npn_csv("npn_grape.csv")
+result = run_phenology_game(npn, phenophase="Ripe fruits", seed=42)
+
+print(result.summary())
+```
+
+Verbatim output for `seed=42` on the bundled `npn_grape.csv`:
+
+```text
+Phenophase: Ripe fruits (n=11)
+Observed: DOY 199 +/- 26, AGDD 2804
+
+Strategies (harvest target DOY):
+  early: DOY 172
+  standard: DOY 195
+  late: DOY 218
+
+Scenarios (actual DOY from observed variability):
+  cool: DOY 229
+  normal: DOY 195
+  warm: DOY 160
+
+Payoff: U = 1 - loss/max_loss; loss = 1.0*max(0,actual-target) [early] + 3.0*max(0,target-actual) [late]
+Recommended: early
+DPUU consensus: YES
+Zero-sum minimax pure: NO (mixed)
+CCE gap: 0.002485, epsilon: 0.014823
+Certified: YES
+Mode: Hedge no-regret (provable)
+```
+
+These pinned values are exercised by `tests/test_determinism.py`.
+
+This is a **data-induced demonstration**, not a grower recommendation.
+
+---
+
+## EML game compiler example
+
+```python
+from phenogame import compile_game_from_data, zero_sum_minimax, certify_provable
+from phenogame.fixtures import load_phenology_table
+
+df = load_phenology_table("grape")
+
+compiled_game = compile_game_from_data(
+    df,
+    target_col="Mean_First_Yes_DOY",
+    feature_cols=[
+        "Latitude",
+        "Longitude",
+        "Elevation_in_Meters",
+        "Mean_First_Yes_Year",
+    ],
+    scenario_cols=["State"],
+)
+
+print(compiled_game.summary())
+
+minimax = zero_sum_minimax(compiled_game.payoff_matrix)
+certificate = certify_provable(compiled_game.payoff_matrix, iterations=2000, seed=1)
+
+print(minimax.summary())
+print(certificate.summary())
+```
+
+For the bundled grape dataset, grouping Nature scenarios by `State` yields four observed states (CA, MA, NY, OR) and a `13 × 4` payoff matrix. Other datasets or scenario columns will produce different values of `S`.
+
+---
+
+## Main components
+
+| Area | Modules |
+|---|---|
+| Response functions | `phenogame.response`, `phenogame.fit` |
+| Farmer-vs-Nature games | `phenogame.game`, `phenogame.steering`, `phenogame.pipeline` |
+| ε-CCE certification | `phenogame.equilibrium` |
+| Robustness diagnostics | `phenogame.robustness`, `phenogame.validation` |
+| Binary choice checks | `phenogame.binary_choice`, `phenogame.bsc_game_bridge` |
+| EML trees/families | `phenogame.eml_tree`, `phenogame.eml_families` |
+| Game compiler | `phenogame.game_compiler` |
+| Regret-transform comparison | `phenogame.regret_transforms`, `phenogame.regret_panel`, `phenogame.joint_correlation` |
+| Certificates/export | `phenogame.certificate`, `phenogame.game_certificate`, `phenogame.ontology` |
+
+---
+
+## Binary stochastic choice diagnostics
+
+PhenoGame includes a pairwise model-comparison screen:
+
+```python
+from phenogame import (
+    pairwise_win_matrix,
+    preference_probabilities,
+    check_binary_choice_constraints,
+)
+
+P = preference_probabilities(pairwise_win_matrix(compiled_game.payoff_surface.T))
+audit = check_binary_choice_constraints(P)
+```
+
+The checks include:
+
+- `p_ij + p_ji = 1`;
+- nonnegative and finite values;
+- triangle-style checks: `p_ij + p_jk + p_ki <= 2`.
+
+These are **diagnostic necessary-condition checks**, not a full rationalisability proof.
+
+---
+
+## Regret-transform comparison
+
+PhenoGame compares four regret transforms:
+
+- standard positive-part regret matching;
+- exponential / Hedge / multiplicative weights;
+- softplus, labelled as not strict regret matching;
+- EML-derived regret transform, empirical only.
+
+```python
+from phenogame import compare_regret_transforms
+
+panel = compare_regret_transforms(
+    compiled_game.payoff_matrix,
+    n_seeds=10,
+    iterations=2000,
+)
+
+print(panel.summary())
+```
+
+Important limitation:
+
+> Hedge / multiplicative-weights mode remains the formal certifier. The EML-derived regret transform is empirical only; no formal no-regret proof is claimed.
+
+---
+
+## Bundled data
+
+PhenoGame bundles small USA-NPN-derived demonstration datasets:
+
+| File | Common name |
+|---|---|
+| `npn_grape.csv` | wine grape |
+| `npn_apple.csv` | apple |
+| `npn_peach.csv` | peach |
+| `npn_red_maple.csv` | red maple |
+
+The package loader removes USA-NPN sentinel and invalid values for `Mean_First_Yes_DOY` and `Mean_AGDD`.
+
+---
+
+## Reproducibility
+
+PhenoGame does not intentionally fabricate hidden example rows. Examples and tests use bundled USA-NPN-derived data.
+
+The package uses randomness where required by the methods:
+
+- Hedge/no-regret action sampling;
+- EML-tree random-feature construction;
+- bootstrap resampling.
+
+Use explicit seeds for reproducible runs. The deterministic contract is exercised by `tests/test_determinism.py`.
+
+---
+
+## Development transparency
+
+PhenoGame was developed as an AI-assisted scientific-software project. AI tools supported ideation, code drafting, refactoring, documentation, and audit workflows.
+
+The package should be independently inspected, tested, and validated before use in research or decision-support workflows.
+
+---
+
+## Recommended wording
+
+Use:
+
+> PhenoGame is a research-alpha package for constructing data-induced finite games from phenology data and evaluating decisions under uncertainty with EML-derived payoff learners, pairwise model comparisons, minimax/ε-CCE analysis, and robustness diagnostics.
+
+Avoid:
+
+> PhenoGame proves a new Nash theorem.
+
+Avoid:
+
+> PhenoGame is a validated agronomic prescription engine.
+
+Avoid:
+
+> EML-RML has a proven no-regret theorem.
+
+---
+
+## Citation
+
+```bibtex
+@software{Feiss_PhenoGame_2026,
+  author  = {Feiss, Richard A. IV},
+  title   = {PhenoGame: Data-induced phenology games with EML payoff learners and robustness diagnostics},
+  version = {0.3.0},
+  year    = {2026},
+  url     = {https://github.com/RFeissIV/phenogame},
+  license = {MIT}
+}
+```
+
+---
+
+## Selected references
+
+1. Odrzywołek, A. (2026). *All elementary functions from a single binary operator*. arXiv:2603.21852. https://doi.org/10.48550/arXiv.2603.21852
+2. Rosemartin, A. H., et al. (2018). *USA National Phenology Network observational data documentation*. U.S. Geological Survey Open-File Report 2018–1060. https://doi.org/10.3133/ofr20181060
+3. USA-NPN Phenology Observation Portal / phenology data DOI. http://dx.doi.org/10.5066/F78S4N1V
+4. Freund, Y., & Schapire, R. E. (1999). Adaptive game playing using multiplicative weights. *Games and Economic Behavior*, 29(1–2), 79–103.
+5. Hart, S., & Mas-Colell, A. (2000). A simple adaptive procedure leading to correlated equilibrium. *Econometrica*, 68(5), 1127–1150. https://doi.org/10.1111/1468-0262.00153
+6. Blum, A., & Mansour, Y. (2007). From external to internal regret. *Journal of Machine Learning Research*, 8, 1307–1324.
+7. Gilboa, I., & Monderer, D. (1992). A game-theoretic approach to the binary stochastic choice problem. *Journal of Mathematical Psychology*, 36(4), 555–572. https://doi.org/10.1016/0022-2496(92)90109-K
+8. Dillon, J. L. (1962). Applications of game theory in agricultural economics: Review and requiem. *Australian Journal of Agricultural Economics*, 6(2), 1–16. https://doi.org/10.22004/ag.econ.22459
+
+---
+
+## License
+
+MIT License. See `LICENSE`.
+
