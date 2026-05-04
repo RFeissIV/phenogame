@@ -1,6 +1,7 @@
 # PhenoGame
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20017093.svg)](https://doi.org/10.5281/zenodo.20017093)
+[![CI](https://github.com/RFeissIV/phenogame/actions/workflows/ci.yml/badge.svg)](https://github.com/RFeissIV/phenogame/actions/workflows/ci.yml)
 
 **Research-alpha Python package for constructing data-induced phenology games from agricultural/phenology data.**
 
