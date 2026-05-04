@@ -1,5 +1,7 @@
 # PhenoGame
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20017093.svg)](https://doi.org/10.5281/zenodo.20017093)
+
 **Research-alpha Python package for constructing data-induced phenology games from agricultural/phenology data.**
 
 PhenoGame combines:
@@ -275,6 +277,7 @@ The package should be independently inspected, tested, and validated before use 
   title   = {PhenoGame: Data-induced phenology games with EML payoff learners and robustness diagnostics},
   version = {0.3.0},
   year    = {2026},
+  doi     = {10.5281/zenodo.20017093},
   url     = {https://github.com/RFeissIV/phenogame},
   license = {MIT}
 }
@@ -298,4 +301,3 @@ The package should be independently inspected, tested, and validated before use 
 ## License
 
 MIT License. See `LICENSE`.
-
