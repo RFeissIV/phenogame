@@ -1,0 +1,29 @@
+include LICENSE
+include README.md
+include CHANGELOG.md
+include SECURITY.md
+include CONTRIBUTING.md
+include CITATION.cff
+include DATASETS.md
+include DATA_MODEL_CARD.md
+include RELEASE_CHECKLIST.md
+include EML_GAME_EXTENSIONS.md
+include EML_RML_AUDIT_RESPONSE.md
+include .gitignore
+recursive-include examples *.py
+recursive-include tests *.py
+recursive-include phenogame/data *.csv
+recursive-include phenogame/data/usa_npn_datasheets *.zip *.md
+recursive-include .github *.yml
+include phenogame/py.typed
+
+# Hard exclusions: never ship caches or build debris in the sdist
+prune .ruff_cache
+prune .pytest_cache
+prune .mypy_cache
+prune build
+prune dist
+global-exclude __pycache__
+global-exclude *.py[cod]
+global-exclude *.egg-info
+global-exclude .DS_Store

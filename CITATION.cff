@@ -1,0 +1,27 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "PhenoGame"
+version: 0.3.0
+date-released: 2026-05-04
+authors:
+  - family-names: "Feiss"
+    given-names: "Richard A."
+    suffix: "IV"
+    affiliation: "Minnesota Center for Prion Research and Outreach, University of Minnesota"
+    orcid: ""
+license: MIT
+doi: 10.5281/zenodo.20017093
+repository-code: "https://github.com/RFeissIV/phenogame"
+type: software
+keywords:
+  - phenology
+  - game-theory
+  - crop-modeling
+  - decision-support
+  - epsilon-CCE
+  - USA-NPN
+  - reproducible-research
+abstract: >-
+  Research-alpha software for constructing data-induced phenology games
+  with EML-derived payoff learners, pairwise model comparisons,
+  minimax/epsilon-CCE analysis, and robustness diagnostics.
